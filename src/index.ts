@@ -5,14 +5,13 @@ import dotenv from "dotenv";
 import {getArticleByQuery, getTopHeadlines} from "./Controllers/articleController";
 import mongoose from "mongoose";
 import cron from "node-cron";
-import {getArticleByAuthor, getArticlesBySourceName, updateIsPublishedArticle} from "./services/articleService";
-const {Telegraf} = require('telegraf');
+import { launchBot } from "./tgbot";
 
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4001;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/news_api";
 
 mongoose.connect(
@@ -33,41 +32,36 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.listen(PORT, async () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    console.info(`Server started at PORT :${PORT}`);
     try {
-        let result = await updateIsPublishedArticle("67a7319ad186c25f850b8191")
-
-        console.log(result)
-
-    } catch (e) {
-        console.log(e)
+      await launchBot();
+      console.warn('Sending message...');
+      
+    } catch (error) {
+      console.error('Error launching bot:', error);
     }
 });
 
 
+//в час нлчи 1 раз
 
-// cron.schedule("* * */1 * *", async () => {
-//     let result = await getTopHeadlines("us")
-//
-//     console.log("From schedule")
-// })
+cron.schedule("0 1 * * *", async () => {
+    let result = await getTopHeadlines("us");
+    //!!  save to db 
 
-// const bot = new Telegraf('7762842818:AAG4iDWbsaWlwmshdkEUn5p3OYcoBzOIDOs');
-// const chatId = -1002385125610;
-//
-// bot.start((ctx: any) => {
-//     ctx.reply("Start bot");
-// });
-//
-// bot.on('text', (ctx: any) => {
-//     console.log(ctx.chat.id);
-//     ctx.reply(`message: "${ctx.message.text}"`);
-// });
-//
-//
-// bot.launch().then(() => {
-//     console.log('Бот запущен!');
-// }).catch((e: any) => console.log(e));
-//
-// process.once('SIGINT', () => bot.stop('SIGINT'))
-// process.once('SIGTERM', () => bot.stop('SIGTERM'))
+    console.log("From schedule");
+}, {
+    timezone: "Europe/Kiev" // Указываем часовой пояс для Киева
+});
+
+
+
+cron.schedule("0 2 * * *", async () => {
+
+    let result = await getArticleByQuery("Ukraine");
+    console.log("From schedule");
+    //!!  save to db
+}, {
+    timezone: "Europe/Kiev" // Указываем часовой пояс для Киева
+});
+
