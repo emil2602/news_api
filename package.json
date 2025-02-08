@@ -2,9 +2,9 @@
   "name": "news_api",
   "version": "1.0.0",
   "description": "",
-  "main": "src/index.ts",
   "scripts": {
     "start": "nodemon --exec ts-node src/index.ts",
+    "startNotDemon": "npx ts-node src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
